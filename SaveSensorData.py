@@ -113,7 +113,7 @@ def get_can_unread_database_values(database_connection):
             results = cursor.fetchall()
             cursor.close()
             return results
-        except Exception, e:
+        except Exception as e:
             cursor.close()
             print "CAN ERROR 3: error fetching data from database: ", str(e)
             return []
@@ -365,26 +365,30 @@ def insert_can_data_into_database(database_connection):
                            VALUES
                              (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                        """
-        try:
-            session_uuid = Constants.Constants.getInstance().session_uuid
-            cursor = database_connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-            speed_ = speed_queue.get()
-            rpm_   = rpm_queue.get()
-            throttle_position_ = throttle_position_queue.get()
-            engine_load_ = engine_load_queue.get()
-            distance_with_mil_on_ = distance_with_mil_on_queue.get()
-            run_time_since_engine_start_ = run_time_since_engine_start_queue.get()
-            fuel_tank_level_input_ = fuel_tank_level_input_queue.get()
-            accelerator_pedal_position_D_ = accelerator_pedal_position_D_queue.get()
-            accelerator_pedal_position_E_ = accelerator_pedal_position_E_queue.get()
-            accelerator_pedal_position_F_ = accelerator_pedal_position_F_queue.get()
-            fuel_type_ = fuel_type_queue.get()
-            engine_fuel_rate_ = engine_fuel_rate_queue.get()
-            driver_demand_engine_ = driver_demand_engine_queue.get()
-            actual_demand_engine_ = actual_demand_engine_queue.get()
-            fuel_system_control_ = fuel_system_control_queue.get()
 
+        session_uuid = Constants.Constants.getInstance().session_uuid
+	#    print('session id = '+session_uuid)
+#        session_uuid = Constants.Constants.getInstance().getSessionUUID()
+        cursor = database_connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        speed_ = speed_queue.get(False)
+        rpm_   = rpm_queue.get(False)
+        throttle_position_ = throttle_position_queue.get(False)
+        engine_load_ = engine_load_queue.get(False)
+        distance_with_mil_on_ = distance_with_mil_on_queue.get(False)
+        run_time_since_engine_start_ = run_time_since_engine_start_queue.get(False)
+        fuel_tank_level_input_ = fuel_tank_level_input_queue.get(False)
+        accelerator_pedal_position_D_ = accelerator_pedal_position_D_queue.get(False)
+        accelerator_pedal_position_E_ = accelerator_pedal_position_E_queue.get(False)
+        accelerator_pedal_position_F_ = accelerator_pedal_position_F_queue.get(False)
+        fuel_type_ = fuel_type_queue.get(False)
+        engine_fuel_rate_ = engine_fuel_rate_queue.get(False)
+        driver_demand_engine_ = driver_demand_engine_queue.get(False)
+        actual_demand_engine_ = actual_demand_engine_queue.get(False)
+        fuel_system_control_ = fuel_system_control_queue.get(False)
+
+	try:
             if not math.isnan(speed_) and not math.isnan(rpm_):
                 cursor.execute(sql_command, (
                     str(session_uuid),
@@ -405,9 +409,9 @@ def insert_can_data_into_database(database_connection):
                     engine_fuel_rate_
                 ))
             else:
-                cursor.execute(sql_command, (str(session_uuid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0))
+                cursor.execute(sql_command, (str(session_uuid), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0))
             cursor.close()
-        except Exception, e:
+        except Exception as e:
             print "CAN ERROR 2: error while inserting data in database: " + str(e)
             pass
 
@@ -449,7 +453,7 @@ if __name__ == "__main__":
         lidarSensor = LidarModule.Lidar.getInstance()
         gpsSensor = GPSModule.GPS.getInstance()
         #canSensor = CANModule.CANModule.getInstance()
-        canSensor = CANModule.CANModule(speed_queue,rpm_queue,throttle_position_queue,engine_load_queue,distance_with_mil_on_queue,accelerator_pedal_position_D_queue,accelerator_pedal_position_E_queue,accelerator_pedal_position_F_queue,fuel_type_queue,engine_fuel_rate_queue,driver_demand_engine_queue,actual_demand_engine_queue,fuel_system_control_queue)
+        canSensor = CANModule.CANModule(speed_queue,rpm_queue,throttle_position_queue,engine_load_queue,distance_with_mil_on_queue,run_time_since_engine_start_queue,fuel_tank_level_input_queue,accelerator_pedal_position_D_queue,accelerator_pedal_position_E_queue,accelerator_pedal_position_F_queue,fuel_type_queue,engine_fuel_rate_queue,driver_demand_engine_queue,actual_demand_engine_queue,fuel_system_control_queue)
         canSensor.start()
         eventWatcher = EventsWatcher.DrivingEvents()
         eventWatcher.send_event_to_server(conn)
@@ -509,9 +513,9 @@ if __name__ == "__main__":
             except InterfaceError:
                 print(datetime.now(), 'ERROR: DB Error : Interface error')
 
-            except Exception as e:
+            except Exception, e:
                 canSensor.disconnect_from_can()
                 gpsSensor.gpsp.running = False
                 gpsSensor.gpsp.join()
                 run = False
-                print(datetime.now(), 'ERROR: Unknown error in SaveSensorData: ', str(e))
+                print(datetime.now(), 'ERROR12: Unknown error in SaveSensorData: ', e)
